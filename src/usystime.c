@@ -25,15 +25,22 @@
  */
 #include <usystime.h>
 
-/* ================== Static Time Data ======================= */
-
+/*
+ * ================== Static Data =======================
+ */
 static clock_t volatile __ticks;       /*!< CPU time */
+static sclock_t volatile  __sticks;    /*!< signed CPU time */
 static time_t  volatile __now;         /*!< Time in UNIX seconds past 1-Jan-70 */
 
-/*!
- * signed CPU time
+static ext_time_ft _ext_time = (void*)0;        /*!< Pointer to External time callback function */
+static ext_settime_ft _ext_settime = (void*)0;  /*!< Pointer to External set time callback function */
+/*!<
+ * \note
+ *    The usys provides a time capability based on \sa __now which updated
+ *    via the Systick time base. If the User application need a more accurate
+ *    time system, it can use these pointers to link for example with an RTC
+ *    time system.
  */
-static sclock_t volatile  __sticks;
 
 /*!
  *  Cron Table holds all requested entries for periodic function calls.
@@ -41,8 +48,25 @@ static sclock_t volatile  __sticks;
  *    All the entries will run in privileged mode and will use the main
  *    stack.
  */
-static crontab_t  _crontab[ST_MAX_CRONTAB_ENTRIES];
+static crontab_t  _crontab[USYS_CRONTAB_ENTRIES];
 
+
+/*
+ * extern declarations (from a HAL or Driver)
+ */
+extern clock_t get_freq (void);
+
+
+/*!
+ * \brief
+ *    micro-system time base service for CPU time.
+ *
+ * This service implements the SysTick callback function in order
+ * to provide micro system - os like functionalities to an application
+ * without RTOS
+ * \note
+ *    The User HAS TO CALL this from the application's SysTick_IRQ
+ */
 void SysTick_Callback (void)
 {
    int i;
@@ -50,16 +74,47 @@ void SysTick_Callback (void)
    // Time
    ++__ticks;
    ++__sticks;
-   if ( !(__ticks % get_freq ()) )
-      ++__now;
+   if ( !_ext_time && !(__ticks % get_freq ()) )
+      ++__now; // Do not update __now when we have external time system
 
    // Cron
-   for (i=0 ; i<ST_MAX_CRONTAB_ENTRIES ; ++i) {
+   for (i=0 ; i<USYS_CRONTAB_ENTRIES ; ++i) {
       if (_crontab[i].fun && !(__ticks %_crontab[i].tic))
          _crontab[i].fun ();
    }
 }
+/*
+ * ========= Set Functions ============
+ */
 
+/*!
+ * \brief
+ *    Set the External time() provider. This sets the \sa _ext_time
+ *    This way the usys can call the _ext_time() to provide a more
+ *    accurate time().
+ *
+ * \param   f     Pointer to User's (or driver's) callback
+ * \return        None
+ */
+void usys_set_rtc_time (ext_time_ft f) {
+   if (f)   _ext_time = f;
+}
+
+/*!
+ * \brief
+ *    Set the External settime() forwarder. This sets the \sa _ext_settime
+ *    This way the usys can call the _extset_time() when sets the time.
+ *
+ * \param   f     Pointer to User's (or driver's) callback
+ * \return        None
+ */
+void usys_set_rtc_settime (ext_settime_ft f) {
+   if (f)   _ext_settime = f;
+}
+
+/*
+ * ======== OS like Functionalities ============
+ */
 
 /*!
  * \brief
@@ -126,11 +181,14 @@ inline sclock_t setsclock (sclock_t c) {
  *    time. If timer is not a null pointer, the return value
  *    is also assigned to the object it points to.
  */
-time_t time(time_t *timer)
+time_t time (time_t *timer)
 {
-   if (timer)
-      *timer = (time_t)__now;
-   return (time_t)__now;
+   if (_ext_time)
+      return _ext_time (timer);     // Forward to external time system
+   else {                           // If no external system, use __now
+      if (timer)  *timer = (time_t)__now;
+      return (time_t)__now;
+   }
 }
 
 
@@ -144,13 +202,18 @@ time_t time(time_t *timer)
  * \return
  *    On success, zero is returned.  On error, -1 is returned
  */
-int settime(const time_t *t) {
-   if (t) {
-      __now = *t;
-      return 0;
+int settime (const time_t *t)
+{
+   if (_ext_settime)
+      return _ext_settime (t);      // Forward to external time system
+   else {                           // If no external system, use __now
+      if (t) {
+         __now = *t;
+         return 0;
+      }
+      else
+         return -1;
    }
-   else
-      return -1;
 }
 
 /*!
@@ -167,7 +230,7 @@ int settime(const time_t *t) {
 void service_add (cronfun_t pfun, clock_t tic)
 {
    uint32_t i;
-   for (i=0 ; i<ST_MAX_CRONTAB_ENTRIES ; ++i)
+   for (i=0 ; i<USYS_CRONTAB_ENTRIES ; ++i)
       if (!_crontab[i].fun) {
          _crontab[i].fun = pfun;
          _crontab[i].tic = tic;
@@ -184,7 +247,9 @@ void service_add (cronfun_t pfun, clock_t tic)
 void service_rem (cronfun_t pfun)
 {
    int i;
-   for (i=0 ; i<ST_MAX_CRONTAB_ENTRIES ; ++i)
+   for (i=0 ; i<USYS_CRONTAB_ENTRIES ; ++i)
       if (_crontab[i].fun == pfun)
          _crontab[i].fun = (void*)0;
 }
+
+

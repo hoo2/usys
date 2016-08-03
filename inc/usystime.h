@@ -26,8 +26,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef __systime_h__
-#define __systime_h__
+#ifndef __usystime_h__
+#define __usystime_h__
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,7 +39,7 @@ extern "C" {
 /*
  * ======= User defines =============
  */
-#define ST_MAX_CRONTAB_ENTRIES      (10)
+#define USYS_CRONTAB_ENTRIES      (10)
 
 /*
  * ===== Data types ========
@@ -86,12 +86,13 @@ typedef long   sclock_t;
 
 
 /*!
+ *  TODO:
  *  Calculate the positive time difference of _t2 and _t1, where
  *  _t1, _t2 are clock_t values
  *  \note
  *    _t2 is AFTER _t1
  */
-#define _CLOCK_DIFF(_t2, _t1)          ( ((_t2-_t1) >= 0) ? (_t2-_t1) : (_CLOCK_T_MAX_VALUE_ - _t1 + _t2 +1) )
+//#define _CLOCK_DIFF(_t2, _t1)          ( ((_t2-_t1) >= 0) ? (_t2-_t1) : (_CLOCK_T_MAX_VALUE_ - _t1 + _t2 +1) )
 
 /*!
  *  Calculate the positive time difference of _t2 and _t1, where
@@ -102,10 +103,10 @@ typedef long   sclock_t;
 #define _SCLOCK_DIFF(_t2, _t1)         ( ((_t2-_t1) >= 0) ? (_t2-_t1) : _SC_ABS(-_t2-_t1) )
 
 
-/*!
- * Pointer to void function (void) to use with cron
- */
-typedef void (*cronfun_t) (void);
+
+typedef void (*cronfun_t) (void);            /*!< Pointer to void function (void) to use with cron */
+typedef time_t (*ext_time_ft) (time_t *);    /*!< Pointer type for External time function. */
+typedef int (*ext_settime_ft) (const time_t *); /*!< Pointer type for External set time function. */
 
 /*!
  * Cron Table data type
@@ -115,22 +116,15 @@ typedef struct {
    clock_t     tic;
 }crontab_t;
 
+
 /*
- * extern declarations (from a HAL or Driver)
+ * ========= Set Functions ============
  */
-extern clock_t get_freq (void);
+void usys_set_rtc_time (ext_time_ft f);
+void usys_set_rtc_settime (ext_settime_ft f);
 
-/* ======== OS like Functionalities ============ */
-
-/*!
- * \brief
- *    micro-system service.
- *
- * This service implements the SysTick callback function in order
- * to provide micro system - os like functionalities to an application
- * without RTOS
- * \note
- *    The User HAS TO CALL this from the application's SysTick_IRQ
+/*
+ * ======== OS like Functionalities ============
  */
 void SysTick_Callback (void);
 
@@ -140,8 +134,8 @@ clock_t setclock (clock_t c);
 sclock_t sclock (void);
 sclock_t setsclock (sclock_t c);
 
-time_t time(time_t *timer);
-int settime(const time_t *t);
+time_t time (time_t *timer);
+int settime (const time_t *t);
 
 void service_add (cronfun_t pfun, clock_t interval);
 void service_rem (cronfun_t pfun);
@@ -151,4 +145,4 @@ void service_rem (cronfun_t pfun);
 }
 #endif
 
-#endif // #ifndef __systime_h__
+#endif // #ifndef __usystime_h__
