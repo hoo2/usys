@@ -57,19 +57,25 @@ typedef _CLOCK_T_ clock_t;             /*!< CPU time type */
 typedef _TIME_T_ time_t;               /*!< date/time in unix secs past 1-Jan-70 type for 68 years*/
 #endif
 
-/*
- * To read signed CPU time use \sa sclock(). Using this can help the
- * user program to find out when the cpu clock variable rolls over max value.
+/*!
+ * To read signed CPU time use \ref sclock(). Using sclock() insteed of clock()
+ * can help the user program to find out when the cpu clock variable rolls over max value.
+ *
  * for ex:
+ *
  *    // wait 10 __sticks;
  *    sclock_t mark = sclock(), diff, n;
  *    do {
  *       n = sclock();
- *       diff = ((n - mark) >=0 ) ? n-mark : -n-mark;
- *       // (n-mark) if not rolled, (-n-mark) if rolled
+ *       diff = ((n - mark) >=0 ) ?
+ *           n-mark :   // if not rolled
+ *          -n-mark ;   // if rolled
  *    } while (diff < 10);
+ *
  * \note
- *    DO NOT exceed \sa _SCLOCK_T_MAX_VALUE_ value for this kind of calculations
+ *    DO NOT exceed \ref _SCLOCK_T_MAX_VALUE_ value for this kind of calculations
+ *
+ * \sa _SCLOCK_DIFF Macro.
  */
 typedef long   sclock_t;
 
@@ -81,7 +87,7 @@ typedef long   sclock_t;
 #define _SCLOCK_T_MAX_VALUE_           (LONG_MAX)  //!< Helper macro for maximum signed CPU time calculations
 
 //! Absolute value macro
-#define _SC_ABS(_x)                    ( (_x<0) ? (-_x) : (_x) )
+#define _SC_ABS(_x)                    ( ((_x) < 0) ? -(_x) : (_x) )
 
 
 
@@ -100,7 +106,7 @@ typedef long   sclock_t;
  *  \note
  *    _t2 is AFTER _t1
  */
-#define _SCLOCK_DIFF(_t2, _t1)         ( ((_t2-_t1) >= 0) ? (_t2-_t1) : _SC_ABS(-_t2-_t1) )
+#define _SCLOCK_DIFF(_t2, _t1)         ( (((_t2)-(_t1)) >= 0) ? ((_t2)-(_t1)) : _SC_ABS(-(_t2)-(_t1)) )
 
 
 
