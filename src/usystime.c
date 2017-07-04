@@ -28,12 +28,13 @@
 /*
  * ================== Static Data =======================
  */
-static clock_t volatile __ticks;       /*!< CPU time */
-static sclock_t volatile  __sticks;    /*!< signed CPU time */
-static time_t  volatile __now;         /*!< Time in UNIX seconds past 1-Jan-70 */
+static clock_t volatile __ticks;       //!< CPU time
+static sclock_t volatile  __sticks;    //!< signed CPU time
+static time_t  volatile __now;         //!< Time in UNIX seconds past 1-Jan-70
 
-static ext_time_ft _ext_time = (void*)0;        /*!< Pointer to External time callback function */
-static ext_settime_ft _ext_settime = (void*)0;  /*!< Pointer to External set time callback function */
+static ext_time_ft _ext_time = NULL;         //!< Pointer to External time callback function
+static ext_settime_ft _ext_settime = NULL;   //!< Pointer to External set time callback function
+
 /*!<
  * \note
  *    The usys provides a time capability based on \sa __now which updated
@@ -49,12 +50,6 @@ static ext_settime_ft _ext_settime = (void*)0;  /*!< Pointer to External set tim
  *    stack.
  */
 static crontab_t  _crontab[USYS_CRONTAB_ENTRIES];
-
-
-/*
- * extern declarations (from a HAL or Driver)
- */
-extern clock_t get_freq (void);
 
 
 /*!

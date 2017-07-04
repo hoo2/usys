@@ -134,6 +134,12 @@ void usys_set_rtc_settime (ext_settime_ft f);
  */
 void SysTick_Callback (void);
 
+/*
+ * extern declarations (from a HAL or Driver)
+ */
+extern clock_t get_freq (void);
+extern int set_freq (clock_t sf);
+
 clock_t clock (void);
 clock_t setclock (clock_t c);
 
