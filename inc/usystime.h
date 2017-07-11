@@ -67,9 +67,9 @@ typedef _TIME_T_ time_t;               /*!< date/time in unix secs past 1-Jan-70
  *    sclock_t mark = sclock(), diff, n;
  *    do {
  *       n = sclock();
- *       diff = ((n - mark) >=0 ) ?
- *           n-mark :   // if not rolled
- *          -n-mark ;   // if rolled
+ *       diff = (n > mark ) ?
+ *          n-mark :                      // if not rolled
+ *          0xFFFFFFFF - (n-mark) + 1 ;   // if rolled
  *    } while (diff < 10);
  *
  * \note
@@ -85,28 +85,43 @@ typedef long   sclock_t;
 
 #define _CLOCK_T_MAX_VALUE_            (ULONG_MAX) //!< Helper macro for maximum signed CPU time calculations
 #define _SCLOCK_T_MAX_VALUE_           (LONG_MAX)  //!< Helper macro for maximum signed CPU time calculations
-
-//! Absolute value macro
-#define _SC_ABS(_x)                    ( ((_x) < 0) ? -(_x) : (_x) )
-
+#define _SCLOCK_T_MIN_VALUE_           (LONG_MIN)  //!< Helper macro for minimum signed CPU time calculations
 
 
 /*!
- *  TODO:
- *  Calculate the positive time difference of _t2 and _t1, where
- *  _t1, _t2 are clock_t values
+ *  Calculate the positive time difference of _t2_ and _t1_, where
+ *  _t1_, _t2_ are clock_t values
  *  \note
- *    _t2 is AFTER _t1
+ *    _t2_ is AFTER _t1_
+ *
+ *  ex:
+ *  0   1   2   3   4   5   6   7   8   9
+ *      ^                       ^
+ *      |                       |
+ *      a                       b
+ *
+ * if : t1=a, t2=b      then  dt = b-a             = t2 - t1
+ * if : t1=b, t2=a      then  dt = 9 - (b-a) + 1   = UMAX - (t1-t2) + 1
+ *
  */
-//#define _CLOCK_DIFF(_t2, _t1)          ( ((_t2-_t1) >= 0) ? (_t2-_t1) : (_CLOCK_T_MAX_VALUE_ - _t1 + _t2 +1) )
+#define _CLOCK_DIFF(_t2_, _t1_)     ( ((_t2_)>(_t1_)) ? ((_t2_)-(_t1_)) : (_CLOCK_T_MAX_VALUE_ - ((_t1_) - (_t2_)) + 1) )
 
 /*!
- *  Calculate the positive time difference of _t2 and _t1, where
- *  _t1, _t2 are sclock_t values
+ *  Calculate the positive time difference of _t2_ and _t1_, where
+ *  _t1_, _t2_ are sclock_t values
  *  \note
- *    _t2 is AFTER _t1
+ *    _t2_ is AFTER _t1_
+ *
+ *  ex:
+ * -5  -4  -3  -2  -1   0   1   2   3   4
+ *      ^                       ^
+ *      |                       |
+ *      a                       b
+ *
+ * if : t1=a, t2=b      then  dt = b-a             = t2 - t1
+ * if : t1=b, t2=a      then  dt = 9 - (b-a) + 1   = (LMAX-LMIN) - (t1-t2) + 1
  */
-#define _SCLOCK_DIFF(_t2, _t1)         ( (((_t2)-(_t1)) >= 0) ? ((_t2)-(_t1)) : _SC_ABS(-(_t2)-(_t1)) )
+#define _SCLOCK_DIFF(_t2_, _t1_)         ( ((_t2_)>(_t1_)) ? ((_t2_)-(_t1_)) : ((_SCLOCK_T_MAX_VALUE_ - _SCLOCK_T_MIN_VALUE_) - ((_t1_) - (_t2_)) + 1) )
 
 
 
