@@ -53,18 +53,20 @@ void _exit(int32_t status) {
 int _write(int32_t file, uint8_t *ptr, int32_t len) { __not_implemented(); }
 
 void * _sbrk(int32_t incr) {
-	extern char   end; /* Set by linker.  */
-	static char * heap_end;
-	char *        prev_heap_end;
+	extern unsigned long   _ebss;    /* Set by linker.  */
+	static char * heap_start = 0;
+	char * ret;
 
-	if (heap_end == 0) {
-		heap_end = & end;
+	if (heap_start == 0) {
+	   // Run the first time only to initialize heap_start
+	   heap_start = (char *)(&_ebss + sizeof (unsigned long));
 	}
 
-	prev_heap_end = heap_end;
-	heap_end += incr;
+	// Return the entry value of heap_start
+	ret = heap_start;
+	heap_start += incr;
 
-	return (void *) prev_heap_end;
+	return (void *) ret;
 }
 
 int _getpid(void) { __not_implemented(); }

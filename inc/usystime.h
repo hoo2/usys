@@ -123,7 +123,11 @@ typedef long   sclock_t;
  */
 #define _SCLOCK_DIFF(_t2_, _t1_)         ( ((_t2_)>(_t1_)) ? ((_t2_)-(_t1_)) : ((_SCLOCK_T_MAX_VALUE_ - _SCLOCK_T_MIN_VALUE_) - ((_t1_) - (_t2_)) + 1) )
 
-
+/*
+ * CPU time macros
+ */
+#define  usys_msec(_ms_)      (((_ms_) * get_freq()) / 1000)
+#define  usys_sec(_s_)        ((_s_) * get_freq())
 
 typedef void (*cronfun_t) (void);            /*!< Pointer to void function (void) to use with cron */
 typedef time_t (*ext_time_ft) (time_t *);    /*!< Pointer type for External time function. */
