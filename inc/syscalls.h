@@ -23,6 +23,10 @@
 #ifndef __syscalls_h__
 #define __syscalls_h__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __weak
 #define __weak __attribute__ ((weak))
 #endif
@@ -42,5 +46,8 @@
 #include <sys/time.h>
 #include <sys/times.h>
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif // #ifndef __syscalls_h__

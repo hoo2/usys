@@ -44,13 +44,13 @@ uint8_t **environ = __env;
 void initialise_monitor_handles() {
 }
 
-void _exit(int32_t status) {
+void _exit (int32_t status) {
    while (1) {}      /* Make sure we hang here */
 }
 
 /* Implement your write code here, this is used by puts and printf for example */
 /* return len; */
-int _write(int32_t file, uint8_t *ptr, int32_t len) { __not_implemented(); }
+__weak int _write (int32_t file, uint8_t *ptr, int32_t len) { __not_implemented(); }
 
 void * _sbrk(int32_t incr) {
 	extern unsigned long   _ebss;    /* Set by linker.  */
@@ -69,22 +69,54 @@ void * _sbrk(int32_t incr) {
 	return (void *) ret;
 }
 
-int _getpid(void) { __not_implemented(); }
-int _gettimeofday(struct timeval  *ptimeval, void *ptimezone) { __not_implemented(); }
-int _kill(int32_t pid, int32_t sig)  { __not_implemented(); }
-int _close(int32_t file) { __not_implemented(); }
-int _fstat(int32_t file, struct stat *st) { __not_implemented(); }
-int _isatty(int32_t file) { __not_implemented(); }
-int _lseek(int32_t file, int32_t ptr, int32_t dir) { __not_implemented(); }
-int _read(int32_t file, uint8_t *ptr, int32_t len) { __not_implemented(); }
-int _readlink(const char *path, char *buf, size_t bufsize) { __not_implemented(); }
-int _open(const uint8_t *path, int32_t flags, int32_t mode) { __not_implemented(); }
-int _wait(int32_t *status) { __not_implemented(); }
-int _unlink(const uint8_t *name) { __not_implemented(); }
-int _times(struct tms *buf) { __not_implemented(); }
-int _stat(const uint8_t *file, struct stat *st) { __not_implemented(); }
-int _symlink(const char *path1, const char *path2)  { __not_implemented(); }
-int _link(const uint8_t *old, const uint8_t *new) { __not_implemented(); }
-int _fork(void) { __not_implemented(); }
-int _execve(const uint8_t *name, uint8_t * const *argv, uint8_t * const *env) { __not_implemented(); }
+__weak int _getpid(void) { __not_implemented(); }
+__weak int _gettimeofday(struct timeval  *ptimeval, void *ptimezone) { __not_implemented(); }
+__weak int _kill(int32_t pid, int32_t sig)  { __not_implemented(); }
+__weak int _close(int32_t file) { __not_implemented(); }
+__weak int _fstat(int32_t file, struct stat *st) { __not_implemented(); }
+__weak int _isatty(int32_t file) { __not_implemented(); }
+__weak int _lseek(int32_t file, int32_t ptr, int32_t dir) { __not_implemented(); }
+__weak int _read(int32_t file, uint8_t *ptr, int32_t len) { __not_implemented(); }
+__weak int _readlink(const char *path, char *buf, size_t bufsize) { __not_implemented(); }
+__weak int _open(const uint8_t *path, int32_t flags, int32_t mode) { __not_implemented(); }
+__weak int _wait(int32_t *status) { __not_implemented(); }
+__weak int _unlink(const uint8_t *name) { __not_implemented(); }
+__weak int _times(struct tms *buf) { __not_implemented(); }
+__weak int _stat(const uint8_t *file, struct stat *st) { __not_implemented(); }
+__weak int _symlink(const char *path1, const char *path2)  { __not_implemented(); }
+__weak int _link(const uint8_t *old, const uint8_t *new) { __not_implemented(); }
+__weak int _fork(void) { __not_implemented(); }
+__weak int _execve(const uint8_t *name, uint8_t * const *argv, uint8_t * const *env) { __not_implemented(); }
 
+#ifdef  USE_FULL_ASSERT
+
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *   where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t* file, uint32_t line)
+{
+   /* User can add his own implementation to report the file name and line number,
+      ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+
+   /* Infinite loop */
+   _exit (0);
+}
+#endif
+
+/*!
+ * Minimal __assert_func used by the assert() macro
+ */
+void __assert_func (const char *file, int line, const char *func, const char *failedexpr) {
+   _exit (0);
+}
+
+/*!
+ * Minimal __assert() uses __assert__func()
+ */
+void __assert(const char *file, int line, const char *failedexpr) {
+   __assert_func (file, line, NULL, failedexpr);
+}
