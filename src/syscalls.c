@@ -35,22 +35,31 @@ uint8_t **environ = __env;
 
 
 /* Functions */
-#define  __not_implemented() {   \
-      errno = ENOSYS;            \
-      return -1;                 \
-   }
+#define  __use_1(x)           (void)(x)
+#define  __use_2(x, y)        (void)(x); (void)(y)
+#define  __use_3(x, y, z)     (void)(x); (void)y; (void)(z)
+#define  __use_4(x, y, z, w)  (void)(x); (void)y; (void)(z); (void)(w)
+
+#define  __not_implemented() { \
+   errno = ENOSYS;             \
+   return -1;                  \
+}
 
 
 void initialise_monitor_handles() {
 }
 
 void _exit (int32_t status) {
+   __use_1 (status);
    while (1) {}      /* Make sure we hang here */
 }
 
 /* Implement your write code here, this is used by puts and printf for example */
 /* return len; */
-__weak int _write (int32_t file, uint8_t *ptr, int32_t len) { __not_implemented(); }
+__weak int _write (int32_t file, uint8_t *ptr, int32_t len) {
+   __use_3(file, *ptr, len);
+   __not_implemented();
+}
 
 void * _sbrk(int32_t incr) {
 	extern unsigned long   _ebss;    /* Set by linker.  */
@@ -70,23 +79,53 @@ void * _sbrk(int32_t incr) {
 }
 
 __weak int _getpid(void) { __not_implemented(); }
-__weak int _gettimeofday(struct timeval  *ptimeval, void *ptimezone) { __not_implemented(); }
-__weak int _kill(int32_t pid, int32_t sig)  { __not_implemented(); }
-__weak int _close(int32_t file) { __not_implemented(); }
-__weak int _fstat(int32_t file, struct stat *st) { __not_implemented(); }
-__weak int _isatty(int32_t file) { __not_implemented(); }
-__weak int _lseek(int32_t file, int32_t ptr, int32_t dir) { __not_implemented(); }
-__weak int _read(int32_t file, uint8_t *ptr, int32_t len) { __not_implemented(); }
-__weak int _readlink(const char *path, char *buf, size_t bufsize) { __not_implemented(); }
-__weak int _open(const uint8_t *path, int32_t flags, int32_t mode) { __not_implemented(); }
-__weak int _wait(int32_t *status) { __not_implemented(); }
-__weak int _unlink(const uint8_t *name) { __not_implemented(); }
-__weak int _times(struct tms *buf) { __not_implemented(); }
-__weak int _stat(const uint8_t *file, struct stat *st) { __not_implemented(); }
-__weak int _symlink(const char *path1, const char *path2)  { __not_implemented(); }
-__weak int _link(const uint8_t *old, const uint8_t *new) { __not_implemented(); }
+__weak int _gettimeofday(struct timeval  *ptimeval, void *ptimezone) {
+   __use_2(*ptimeval, ptimezone);
+   __not_implemented();
+}
+__weak int _kill(int32_t pid, int32_t sig)  {
+   __use_2(pid, sig);
+   __not_implemented();
+}
+__weak int _close(int32_t file) { __use_1(file); __not_implemented(); }
+__weak int _fstat(int32_t file, struct stat *st) { __use_2(file, *st); __not_implemented(); }
+__weak int _isatty(int32_t file) { __use_1(file); __not_implemented(); }
+__weak int _lseek(int32_t file, int32_t ptr, int32_t dir) {
+   __use_3(file, ptr, dir);
+   __not_implemented();
+}
+__weak int _read(int32_t file, uint8_t *ptr, int32_t len) {
+   __use_3(file, *ptr, len);
+   __not_implemented();
+}
+__weak int _readlink(const char *path, char *buf, size_t bufsize) {
+   __use_3(*path, *buf, bufsize);
+   __not_implemented();
+}
+__weak int _open(const uint8_t *path, int32_t flags, int32_t mode) {
+   __use_3 (*path, flags, mode);
+   __not_implemented();
+}
+__weak int _wait(int32_t *status) { __use_1 (*status); __not_implemented(); }
+__weak int _unlink(const uint8_t *name) { __use_1(*name); __not_implemented(); }
+__weak int _times(struct tms *buf) { __use_1(*buf); __not_implemented(); }
+__weak int _stat(const uint8_t *file, struct stat *st) {
+   __use_2(*file, *st);
+   __not_implemented();
+}
+__weak int _symlink(const char *path1, const char *path2)  {
+   __use_2(*path1, *path2);
+   __not_implemented();
+}
+__weak int _link(const uint8_t *old, const uint8_t *new) {
+   __use_2(*old, *new);
+   __not_implemented();
+}
 __weak int _fork(void) { __not_implemented(); }
-__weak int _execve(const uint8_t *name, uint8_t * const *argv, uint8_t * const *env) { __not_implemented(); }
+__weak int _execve(const uint8_t *name, uint8_t * const *argv, uint8_t * const *env) {
+   __use_3 (*name, *argv, *env);
+   __not_implemented();
+}
 
 #ifdef  USE_FULL_ASSERT
 
@@ -111,6 +150,7 @@ void assert_failed(uint8_t* file, uint32_t line)
  * Minimal __assert_func used by the assert() macro
  */
 void __assert_func (const char *file, int line, const char *func, const char *failedexpr) {
+   __use_4(*file, line, *func, *failedexpr);
    _exit (0);
 }
 
